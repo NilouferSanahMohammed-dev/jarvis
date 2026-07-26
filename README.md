@@ -35,15 +35,8 @@ Tap the core (where "jarvis" is written) and speak, or just type in the box, eit
 **Utility**
 - Open a site ("open youtube", "open github")
 - Search the web ("search for mechanical keyboards")
-- Show your conversation history, or clear it
 
 Every response is both shown briefly on screen and spoken out loud.
-
-## About the conversation history
-
-I wanted the screen to stay clean, so there's no permanent chat log cluttering the HUD. Instead, every reply shows up as a brief caption near the core that fades out after a few seconds. Nothing is lost though, every exchange is saved automatically in the background.
-
-To look back at everything you've said, click the "history" button in the top right corner (or just say "show my history"). It opens a panel grouped by day, with a "clear" button if you'd rather start fresh. All of it lives in your browser's local storage, nothing is sent anywhere.
 
 ## A note on browser support
 

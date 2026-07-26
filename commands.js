@@ -299,20 +299,6 @@ const COMMANDS = [
     },
   },
   {
-    test: (t) => /show (my )?history|past conversations/.test(t),
-    run: () => {
-      window.dispatchEvent(new CustomEvent("jarvis-show-history"));
-      return "pulling up the conversation history.";
-    },
-  },
-  {
-    test: (t) => /clear history|forget everything/.test(t),
-    run: () => {
-      window.dispatchEvent(new CustomEvent("jarvis-clear-history"));
-      return "history cleared.";
-    },
-  },
-  {
     test: (t) => /help|what can you do/.test(t),
     run: () =>
       "the time, date, or weather, a joke, quick math, unit conversions, the time somewhere else in the world, a random fact, your battery level, defining a word, flipping a coin, rolling a dice, taking notes, setting reminders and timers, opening a site, or searching the web. within reason, I'm at your disposal.",
