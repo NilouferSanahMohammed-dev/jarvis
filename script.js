@@ -6,6 +6,13 @@
  * Safari currently don't, hence the text input fallback that always
  * works everywhere). Voice output uses SpeechSynthesis, which is far
  * more broadly supported.
+ *
+ * Two ways to talk to it:
+ *   1. Tap the core, say one thing, done (works whether or not wake
+ *      mode is on).
+ *   2. Turn on "hey jarvis" mode (top right toggle) for hands-free use.
+ *      That keeps the mic continuously listening in the background for
+ *      the wake phrase, so nothing gets sent anywhere until you say it.
  */
 
 const coreWrap = document.getElementById("coreWrap");
@@ -18,6 +25,10 @@ const powerEl = document.getElementById("powerVal");
 const timeEl = document.getElementById("readoutTime");
 const dateEl = document.getElementById("readoutDate");
 const tickMarks = document.getElementById("tickMarks");
+const wakeToggle = document.getElementById("wakeToggle");
+const nameOverlay = document.getElementById("nameOverlay");
+const nameForm = document.getElementById("nameForm");
+const nameInput = document.getElementById("nameInput");
 
 /* ---------------- Decorative edge readouts ---------------- */
 
@@ -53,6 +64,27 @@ for (let i = 0; i < 60; i++) {
   tickMarks.appendChild(line);
 }
 
+/* ---------------- Name capture (remembered per browser) ---------------- */
+
+const NAME_KEY = "jarvis-user-name";
+
+function getUserName() {
+  return localStorage.getItem(NAME_KEY) || "";
+}
+
+function setUserName(name) {
+  localStorage.setItem(NAME_KEY, name);
+}
+
+nameForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const value = nameInput.value.trim();
+  if (!value) return;
+  setUserName(value);
+  nameOverlay.classList.remove("open");
+  greet();
+});
+
 /* ---------------- Transcript ---------------- */
 
 function addLine(who, text) {
@@ -77,7 +109,7 @@ function speak(text) {
   };
   utterance.onend = () => {
     coreWrap.classList.remove("speaking");
-    statusEl.textContent = "standing by";
+    statusEl.textContent = wakeModeEnabled ? "listening for \u201chey jarvis\u201d" : "standing by";
   };
 
   window.speechSynthesis.cancel();
@@ -88,7 +120,7 @@ function speak(text) {
 
 async function submitCommand(text) {
   addLine("user", text);
-  const reply = await handleCommand(text);
+  const reply = await handleCommand(text, { name: getUserName() });
   addLine("jarvis", reply);
   speak(reply);
 }
@@ -119,28 +151,81 @@ window.addEventListener("jarvis-reminder-done", (e) => {
   speak(message);
 });
 
+window.addEventListener("jarvis-name-changed", (e) => {
+  setUserName(e.detail.name);
+});
+
 /* ---------------- Voice recognition ---------------- */
+
+const WAKE_MODE_KEY = "jarvis-wake-mode";
+const WAKE_PATTERN = /\bhey jarvis\b|\bjarvis\b/;
 
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 let listening = false;
+let wakeModeEnabled = localStorage.getItem(WAKE_MODE_KEY) === "on";
+let awaitingCommand = false;
+
+function updateWakeToggleUI() {
+  wakeToggle.textContent = `hey jarvis: ${wakeModeEnabled ? "on" : "off"}`;
+  wakeToggle.classList.toggle("on", wakeModeEnabled);
+  coreWrap.classList.toggle("wake-armed", wakeModeEnabled);
+  coreHint.textContent = wakeModeEnabled ? "say \u201chey jarvis\u201d, or tap me" : "tap to talk";
+}
+
+function startRecognition() {
+  if (!recognition) return;
+  recognition.continuous = wakeModeEnabled;
+  try { recognition.start(); } catch { /* already running */ }
+}
 
 if (SpeechRecognitionAPI) {
   recognition = new SpeechRecognitionAPI();
-  recognition.continuous = false;
   recognition.interimResults = false;
   recognition.lang = "en-US";
 
   recognition.onstart = () => {
     listening = true;
     coreWrap.classList.add("listening");
-    coreHint.textContent = "listening...";
-    statusEl.textContent = "listening";
+    statusEl.textContent = wakeModeEnabled ? "listening for \u201chey jarvis\u201d" : "listening";
+    if (!wakeModeEnabled) coreHint.textContent = "listening...";
   };
 
   recognition.onresult = (event) => {
-    const text = event.results[0][0].transcript;
-    submitCommand(text);
+    const raw = event.results[event.results.length - 1][0].transcript;
+    const lower = raw.toLowerCase();
+
+    if (!wakeModeEnabled) {
+      submitCommand(raw);
+      return;
+    }
+
+    if (awaitingCommand) {
+      awaitingCommand = false;
+      coreWrap.classList.remove("awaiting");
+      coreHint.textContent = "say \u201chey jarvis\u201d, or tap me";
+      submitCommand(raw);
+      return;
+    }
+
+    if (WAKE_PATTERN.test(lower)) {
+      const remainder = raw.replace(/hey jarvis/i, "").replace(/jarvis/i, "").trim();
+      if (remainder) {
+        submitCommand(remainder);
+      } else {
+        awaitingCommand = true;
+        coreWrap.classList.add("awaiting");
+        coreHint.textContent = "yes?";
+        setTimeout(() => {
+          if (awaitingCommand) {
+            awaitingCommand = false;
+            coreWrap.classList.remove("awaiting");
+            coreHint.textContent = "say \u201chey jarvis\u201d, or tap me";
+          }
+        }, 6000);
+      }
+    }
+    // Otherwise: ambient speech not directed at jarvis, ignore it.
   };
 
   recognition.onerror = () => {
@@ -150,27 +235,70 @@ if (SpeechRecognitionAPI) {
   recognition.onend = () => {
     listening = false;
     coreWrap.classList.remove("listening");
-    coreHint.textContent = "tap to talk";
-    if (statusEl.textContent === "listening") statusEl.textContent = "standing by";
+    if (!wakeModeEnabled) {
+      coreHint.textContent = "tap to talk";
+      if (statusEl.textContent === "listening") statusEl.textContent = "standing by";
+    } else {
+      // Continuous mode occasionally ends itself after silence, restart it
+      // so hands-free listening keeps working without needing another tap.
+      statusEl.textContent = "listening for \u201chey jarvis\u201d";
+      setTimeout(() => {
+        if (wakeModeEnabled) startRecognition();
+      }, 250);
+    }
   };
 
   coreWrap.addEventListener("click", () => {
+    if (wakeModeEnabled) {
+      if (listening) {
+        awaitingCommand = true;
+        coreWrap.classList.add("awaiting");
+        coreHint.textContent = "yes?";
+      }
+      return;
+    }
     if (listening) {
       recognition.stop();
     } else {
-      try { recognition.start(); } catch { /* already started */ }
+      startRecognition();
     }
   });
 
-  coreHint.textContent = "tap to talk";
+  wakeToggle.addEventListener("click", () => {
+    wakeModeEnabled = !wakeModeEnabled;
+    localStorage.setItem(WAKE_MODE_KEY, wakeModeEnabled ? "on" : "off");
+    updateWakeToggleUI();
+
+    if (wakeModeEnabled) {
+      startRecognition();
+    } else if (listening) {
+      recognition.stop();
+    }
+  });
+
+  updateWakeToggleUI();
+  if (wakeModeEnabled) startRecognition();
 } else {
   coreWrap.style.cursor = "default";
   coreHint.textContent = "voice input isn't supported in this browser, type below instead";
+  wakeToggle.style.display = "none";
 }
 
 /* ---------------- Greeting ---------------- */
 
-setTimeout(() => {
-  const greeting = "good to see you. all systems green. tap me and speak, or just type below, either works.";
+function greet() {
+  const name = getUserName();
+  const greeting = name
+    ? `good to see you, ${name}. all systems green. tap me and speak, or just type below, either works.`
+    : "good to see you. all systems green. tap me and speak, or just type below, either works.";
   addLine("jarvis", greeting);
+}
+
+setTimeout(() => {
+  if (!getUserName()) {
+    nameOverlay.classList.add("open");
+    nameInput.focus();
+  } else {
+    greet();
+  }
 }, 500);

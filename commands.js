@@ -132,6 +132,36 @@ function saveNote(text) {
   localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
 }
 
+/**
+ * Strips the wake phrase ("hey jarvis" / "jarvis") and common polite
+ * filler ("could you", "can you", "please", and so on) from the front
+ * of whatever the person said, so "hey jarvis could you open youtube"
+ * and "jarvis open youtube" and plain "open youtube" all end up as the
+ * same normalized command underneath.
+ */
+function normalizeInput(rawInput) {
+  let text = rawInput.trim().toLowerCase();
+  text = text.replace(/\bhey jarvis\b/g, "").replace(/\bjarvis\b/g, "");
+  text = text.trim();
+
+  const fillerPrefixes = [
+    /^could you\s+/, /^can you\s+/, /^would you\s+/, /^will you\s+/,
+    /^please\s+/, /^can u\s+/, /^hey\s+/,
+  ];
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const pattern of fillerPrefixes) {
+      if (pattern.test(text)) {
+        text = text.replace(pattern, "");
+        changed = true;
+      }
+    }
+  }
+
+  return text.replace(/\s+/g, " ").replace(/[?.!]+$/, "").trim();
+}
+
 const COMMANDS = [
   {
     test: (t) => /^(hi|hello|hey)\b/.test(t),
@@ -139,7 +169,23 @@ const COMMANDS = [
   },
   {
     test: (t) => /who are you|what('s| is) your name/.test(t),
-    run: () => "jarvis. at your service, more or less. I run the interface, you run everything else.",
+    run: (t, ctx) =>
+      ctx?.name
+        ? `jarvis. at your service, ${ctx.name}. I run the interface, you run everything else.`
+        : "jarvis. at your service, more or less. I run the interface, you run everything else.",
+  },
+  {
+    test: (t) => /^call me /.test(t),
+    run: (t) => {
+      const name = t.replace(/^call me /, "").trim();
+      if (!name) return "call you what?";
+      window.dispatchEvent(new CustomEvent("jarvis-name-changed", { detail: { name } }));
+      return `got it, ${name}. I'll remember that.`;
+    },
+  },
+  {
+    test: (t) => /what('s| is) my name/.test(t),
+    run: (t, ctx) => (ctx?.name ? `you're ${ctx.name}, as far as I know.` : "I don't have a name for you yet, try saying 'call me' followed by your name."),
   },
   {
     test: (t) => /what time is it|current time/.test(t),
@@ -167,21 +213,25 @@ const COMMANDS = [
     },
   },
   {
+    test: (t) => Object.keys(SITE_MAP).some((site) => new RegExp(`\\b${site}\\b`).test(t)),
+    run: (t) => {
+      const target = Object.keys(SITE_MAP).find((site) => new RegExp(`\\b${site}\\b`).test(t));
+      window.open(SITE_MAP[target], "_blank");
+      return `opening ${target}.`;
+    },
+  },
+  {
     test: (t) => /^open /.test(t),
     run: (t) => {
       const target = t.replace(/^open /, "").trim();
-      const url = SITE_MAP[target];
-      if (url) {
-        window.open(url, "_blank");
-        return `opening ${target}.`;
-      }
       return `I don't have a shortcut for "${target}" yet, try "search for ${target}" instead.`;
     },
   },
   {
-    test: (t) => /^search( for)? /.test(t),
+    test: (t) => /search( for)?\s+.+/.test(t),
     run: (t) => {
-      const query = t.replace(/^search( for)? /, "").trim();
+      const match = t.match(/search( for)?\s+(.+)/);
+      const query = match ? match[2].trim() : t;
       window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, "_blank");
       return `searching for ${query}.`;
     },
@@ -301,17 +351,17 @@ const COMMANDS = [
   {
     test: (t) => /help|what can you do/.test(t),
     run: () =>
-      "the time, date, or weather, a joke, quick math, unit conversions, the time somewhere else in the world, a random fact, your battery level, defining a word, flipping a coin, rolling a dice, taking notes, setting reminders and timers, opening a site, or searching the web. within reason, I'm at your disposal.",
+      "the time, date, or weather, a joke, quick math, unit conversions, the time somewhere else in the world, a random fact, your battery level, defining a word, flipping a coin, rolling a dice, taking notes, setting reminders and timers, opening a site, searching the web, or remembering your name if you tell me to call you something. within reason, I'm at your disposal.",
   },
 ];
 
-async function handleCommand(rawInput) {
-  const input = rawInput.trim().toLowerCase();
+async function handleCommand(rawInput, context = {}) {
+  const input = normalizeInput(rawInput);
   if (!input) return "I didn't catch that.";
 
   for (const command of COMMANDS) {
     if (command.test(input)) {
-      return await command.run(input);
+      return await command.run(input, context);
     }
   }
 

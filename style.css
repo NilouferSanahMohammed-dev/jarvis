@@ -97,10 +97,25 @@ html, body {
 
 .core-wrap.listening .core-glow { transform: scale(1.15); opacity: 1; animation: pulse 1s ease-in-out infinite; }
 .core-wrap.speaking .core-glow { transform: scale(1.08); animation: pulse 0.5s ease-in-out infinite; }
+.core-wrap.awaiting .core-glow { transform: scale(1.1); opacity: 1; animation: pulse 0.7s ease-in-out infinite; }
 
 @keyframes pulse {
   0%, 100% { filter: blur(2px) brightness(1); }
   50% { filter: blur(4px) brightness(1.4); }
+}
+
+.ring-ambient {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 2;
+  stroke-opacity: 0;
+  transition: stroke-opacity 0.4s ease;
+}
+.core-wrap.wake-armed .ring-ambient { stroke-opacity: 0.55; animation: pulse-ambient 2.6s ease-in-out infinite; }
+
+@keyframes pulse-ambient {
+  0%, 100% { stroke-opacity: 0.35; }
+  50% { stroke-opacity: 0.7; }
 }
 
 .core-center {
@@ -213,3 +228,78 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .ring, .core-wrap.listening .core-glow, .core-wrap.speaking .core-glow { animation: none !important; }
 }
+
+/* ---------------- Wake word toggle ---------------- */
+
+.wake-toggle {
+  background: none;
+  border: 1px solid var(--cyan-dim);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: 'Space Mono', monospace;
+}
+.wake-toggle:hover { background: var(--cyan-faint); }
+.wake-toggle.on { border-color: var(--amber); color: var(--amber); background: rgba(255,180,87,0.1); }
+
+/* ---------------- Name capture modal ---------------- */
+
+.name-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(1,5,7,0.85);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.name-overlay.open { display: flex; }
+
+.name-card {
+  width: min(360px, 90vw);
+  background: rgba(9,20,26,0.9);
+  border: 1px solid var(--cyan-dim);
+  border-radius: 14px;
+  padding: 28px 26px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.name-card h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin: 0;
+}
+
+.name-card input {
+  background: rgba(109,243,255,0.06);
+  border: 1px solid var(--cyan-dim);
+  color: var(--ink);
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+.name-card input:focus { outline: none; border-color: var(--cyan); }
+
+.name-card button {
+  background: var(--cyan-faint);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.name-card button:hover { background: rgba(109,243,255,0.2); }
