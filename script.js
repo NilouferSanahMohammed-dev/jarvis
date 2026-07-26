@@ -12,7 +12,7 @@ const coreWrap = document.querySelector(".core-wrap");
 const coreHint = document.getElementById("coreHint");
 const talkBtn = document.getElementById("talkBtn");
 const talkBtnLabel = document.getElementById("talkBtnLabel");
-const transcript = document.getElementById("transcript");
+const toast = document.getElementById("toast");
 const textForm = document.getElementById("textForm");
 const textInput = document.getElementById("textInput");
 const statusEl = document.getElementById("readoutStatus");
@@ -20,6 +20,11 @@ const powerEl = document.getElementById("powerVal");
 const timeEl = document.getElementById("readoutTime");
 const dateEl = document.getElementById("readoutDate");
 const tickMarks = document.getElementById("tickMarks");
+const historyToggle = document.getElementById("historyToggle");
+const historyOverlay = document.getElementById("historyOverlay");
+const closeHistoryBtn = document.getElementById("closeHistoryBtn");
+const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+const historyList = document.getElementById("historyList");
 
 /* ---------------- Decorative edge readouts ---------------- */
 
@@ -55,14 +60,85 @@ for (let i = 0; i < 60; i++) {
   tickMarks.appendChild(line);
 }
 
-/* ---------------- Transcript ---------------- */
+/* ---------------- Toast (the only visible reply, briefly) ---------------- */
+
+let toastTimeoutId = null;
+
+function showToast(text) {
+  toast.textContent = text;
+  toast.classList.add("visible");
+  clearTimeout(toastTimeoutId);
+  toastTimeoutId = setTimeout(() => {
+    toast.classList.remove("visible");
+  }, 5000);
+}
+
+/* ---------------- Persisted history (hidden by default, viewable on demand) ---------------- */
+
+const HISTORY_KEY = "jarvis-history-v1";
+
+function loadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistoryEntry(who, text) {
+  const history = loadHistory();
+  history.push({ who, text, timestamp: Date.now() });
+  // Keep the log from growing forever, the last 500 exchanges is plenty.
+  const trimmed = history.slice(-500);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+}
+
+function renderHistory() {
+  const history = loadHistory();
+  historyList.innerHTML = "";
+
+  if (history.length === 0) {
+    historyList.innerHTML = `<p class="history-empty">nothing logged yet, start a conversation and it'll show up here.</p>`;
+    return;
+  }
+
+  let lastDay = "";
+  history.forEach((entry) => {
+    const day = new Date(entry.timestamp).toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+    });
+    if (day !== lastDay) {
+      const label = document.createElement("p");
+      label.className = "history-day-label";
+      label.textContent = day;
+      historyList.appendChild(label);
+      lastDay = day;
+    }
+    const line = document.createElement("p");
+    line.className = entry.who === "user" ? "history-line history-line-user" : "history-line history-line-jarvis";
+    line.textContent = entry.text;
+    historyList.appendChild(line);
+  });
+}
+
+historyToggle.addEventListener("click", () => {
+  renderHistory();
+  historyOverlay.classList.add("open");
+});
+closeHistoryBtn.addEventListener("click", () => historyOverlay.classList.remove("open"));
+historyOverlay.addEventListener("click", (e) => {
+  if (e.target === historyOverlay) historyOverlay.classList.remove("open");
+});
+clearHistoryBtn.addEventListener("click", () => {
+  localStorage.removeItem(HISTORY_KEY);
+  renderHistory();
+});
 
 function addLine(who, text) {
-  const line = document.createElement("p");
-  line.className = who === "user" ? "line line-user" : "line line-jarvis";
-  line.textContent = text;
-  transcript.appendChild(line);
-  transcript.scrollTop = transcript.scrollHeight;
+  saveHistoryEntry(who, text);
+  if (who === "jarvis") showToast(text);
 }
 
 /* ---------------- Speech synthesis ---------------- */
@@ -112,6 +188,23 @@ window.addEventListener("jarvis-timer-done", (e) => {
   const message = `your ${amount} ${unit}${amount === 1 ? "" : "s"} timer is up.`;
   addLine("jarvis", message);
   speak(message);
+});
+
+window.addEventListener("jarvis-reminder-done", (e) => {
+  const { task } = e.detail;
+  const message = `reminder: ${task}.`;
+  addLine("jarvis", message);
+  speak(message);
+});
+
+window.addEventListener("jarvis-show-history", () => {
+  renderHistory();
+  historyOverlay.classList.add("open");
+});
+
+window.addEventListener("jarvis-clear-history", () => {
+  localStorage.removeItem(HISTORY_KEY);
+  renderHistory();
 });
 
 /* ---------------- Voice recognition ---------------- */

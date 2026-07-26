@@ -83,6 +83,55 @@ function getWeather() {
   });
 }
 
+const FACTS = [
+  "a group of flamingos is called a flamboyance.",
+  "octopuses have three hearts, and two of them stop beating when they swim.",
+  "the shortest war in recorded history lasted 38 minutes, between Britain and Zanzibar in 1896.",
+  "bananas are berries, but strawberries technically aren't.",
+  "honey never spoils. archaeologists have found edible honey in ancient Egyptian tombs.",
+  "a day on Venus is longer than a year on Venus.",
+];
+
+const WORLD_CLOCK_ZONES = {
+  london: "Europe/London",
+  paris: "Europe/Paris",
+  berlin: "Europe/Berlin",
+  tokyo: "Asia/Tokyo",
+  "new york": "America/New_York",
+  "los angeles": "America/Los_Angeles",
+  chicago: "America/Chicago",
+  sydney: "Australia/Sydney",
+  dubai: "Asia/Dubai",
+  mumbai: "Asia/Kolkata",
+  singapore: "Asia/Singapore",
+  toronto: "America/Toronto",
+};
+
+const UNIT_CONVERSIONS = {
+  "km to miles": (n) => (n * 0.621371).toFixed(2) + " miles",
+  "miles to km": (n) => (n * 1.60934).toFixed(2) + " km",
+  "kg to lbs": (n) => (n * 2.20462).toFixed(2) + " lbs",
+  "lbs to kg": (n) => (n * 0.453592).toFixed(2) + " kg",
+  "celsius to fahrenheit": (n) => (n * 9 / 5 + 32).toFixed(1) + " degrees fahrenheit",
+  "fahrenheit to celsius": (n) => (((n - 32) * 5) / 9).toFixed(1) + " degrees celsius",
+};
+
+const NOTES_KEY = "jarvis-notes-v1";
+
+function loadNotes() {
+  try {
+    return JSON.parse(localStorage.getItem(NOTES_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveNote(text) {
+  const notes = loadNotes();
+  notes.push(text);
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+
 const COMMANDS = [
   {
     test: (t) => /^(hi|hello|hey)\b/.test(t),
@@ -152,9 +201,121 @@ const COMMANDS = [
     },
   },
   {
+    test: (t) => /^define /.test(t),
+    run: async (t) => {
+      const word = t.replace(/^define /, "").trim();
+      try {
+        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+        if (!res.ok) return `I couldn't find a definition for "${word}".`;
+        const data = await res.json();
+        const definition = data[0]?.meanings?.[0]?.definitions?.[0]?.definition;
+        return definition ? `${word}: ${definition}` : `I couldn't find a clean definition for "${word}".`;
+      } catch {
+        return "I couldn't reach the dictionary just now.";
+      }
+    },
+  },
+  {
+    test: (t) => /flip a coin|coin flip/.test(t),
+    run: () => (Math.random() < 0.5 ? "heads." : "tails."),
+  },
+  {
+    test: (t) => /roll a( d\d+)?( )?dice|roll a d\d+/.test(t),
+    run: (t) => {
+      const match = t.match(/d(\d+)/);
+      const sides = match ? Number(match[1]) : 6;
+      const result = Math.floor(Math.random() * sides) + 1;
+      return `rolled a ${result}, out of ${sides}.`;
+    },
+  },
+  {
+    test: (t) => /^(take a note|note this|remember this)[:\s]/.test(t),
+    run: (t) => {
+      const note = t.replace(/^(take a note|note this|remember this)[:\s]/, "").trim();
+      if (!note) return "what should I note down?";
+      saveNote(note);
+      return "noted.";
+    },
+  },
+  {
+    test: (t) => /(read|show|what are) my notes/.test(t),
+    run: () => {
+      const notes = loadNotes();
+      if (notes.length === 0) return "you don't have any notes saved yet.";
+      return `you've got ${notes.length} note${notes.length === 1 ? "" : "s"}: ${notes.join(". ")}.`;
+    },
+  },
+  {
+    test: (t) => /^remind me to /.test(t),
+    run: (t) => {
+      const match = t.match(/^remind me to (.+?) in (\d+)\s*(second|minute|hour)/);
+      if (!match) return "tell me what to remind you of and when, like 'remind me to stretch in 10 minutes'.";
+      const [, task, amountStr, unit] = match;
+      const amount = Number(amountStr);
+      const ms = amount * (unit === "hour" ? 3600000 : unit === "minute" ? 60000 : 1000);
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("jarvis-reminder-done", { detail: { task } }));
+      }, ms);
+      return `I'll remind you to ${task} in ${amount} ${unit}${amount === 1 ? "" : "s"}.`;
+    },
+  },
+  {
+    test: (t) => /what time is it in |time in /.test(t),
+    run: (t) => {
+      const city = t.replace(/.*time is it in |.*time in /, "").trim();
+      const zone = WORLD_CLOCK_ZONES[city];
+      if (!zone) return `I don't have a timezone mapped for "${city}" yet.`;
+      const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: zone });
+      return `it's ${time} in ${city}.`;
+    },
+  },
+  {
+    test: (t) => /^convert /.test(t),
+    run: (t) => {
+      const match = t.match(/^convert ([\d.]+)\s*(.+?) to (.+)/);
+      if (!match) return "try something like 'convert 10 km to miles'.";
+      const [, amountStr, fromUnit, toUnit] = match;
+      const key = `${fromUnit.trim()} to ${toUnit.trim()}`;
+      const converter = UNIT_CONVERSIONS[key];
+      if (!converter) return `I don't know how to convert ${fromUnit.trim()} to ${toUnit.trim()} yet.`;
+      return `${amountStr} ${fromUnit.trim()} is ${converter(Number(amountStr))}.`;
+    },
+  },
+  {
+    test: (t) => /tell me a fact|random fact/.test(t),
+    run: () => FACTS[Math.floor(Math.random() * FACTS.length)],
+  },
+  {
+    test: (t) => /battery/.test(t),
+    run: async () => {
+      if (!navigator.getBattery) return "I don't have access to battery information in this browser.";
+      try {
+        const battery = await navigator.getBattery();
+        const percent = Math.round(battery.level * 100);
+        return `you're at ${percent}% battery${battery.charging ? ", and charging" : ""}.`;
+      } catch {
+        return "I couldn't read the battery status.";
+      }
+    },
+  },
+  {
+    test: (t) => /show (my )?history|past conversations/.test(t),
+    run: () => {
+      window.dispatchEvent(new CustomEvent("jarvis-show-history"));
+      return "pulling up the conversation history.";
+    },
+  },
+  {
+    test: (t) => /clear history|forget everything/.test(t),
+    run: () => {
+      window.dispatchEvent(new CustomEvent("jarvis-clear-history"));
+      return "history cleared.";
+    },
+  },
+  {
     test: (t) => /help|what can you do/.test(t),
     run: () =>
-      "the time, the date, the weather, a joke if your standards are low, quick math, opening a site, searching the web, or setting a timer. within reason, I'm at your disposal.",
+      "the time, date, or weather, a joke, quick math, unit conversions, the time somewhere else in the world, a random fact, your battery level, defining a word, flipping a coin, rolling a dice, taking notes, setting reminders and timers, opening a site, or searching the web. within reason, I'm at your disposal.",
   },
 ];
 

@@ -1,6 +1,6 @@
 # jarvis 🔵
 
-A holographic HUD assistant with a name and a personality on purpose. Circular rings, a glowing core that pulses when it's listening or talking, voice commands, spoken replies, and enough dry wit in the responses that it feels less like a form and more like something's actually in there.
+A holographic HUD assistant with a name and a personality on purpose. Circular rings, a glowing core that pulses when it's listening or talking, voice commands, spoken replies, and a growing set of real abilities.
 
 ![status](https://img.shields.io/badge/status-active-brightgreen) ![license](https://img.shields.io/badge/license-MIT-blue)
 
@@ -8,18 +8,42 @@ I'll be upfront about the one thing worth being upfront about: this is my own bu
 
 ## What it can actually do
 
-Hold the talk button and speak, or just type in the box, either works:
+Hold the talk button and speak, or just type in the box, either works.
 
-- **Tell you the time or date**
-- **Check the real weather** for your location (via the free Open-Meteo API, same approach as my `nova-deck` project)
-- **Tell a joke**, if your standards are low
-- **Do quick math**, like "what is 12 plus 4"
-- **Open a site** ("open youtube", "open github")
-- **Search the web** ("search for mechanical keyboards")
-- **Set a timer** ("set a timer for 5 minutes")
-- **List what it can do** if you just ask for "help"
+**Basics**
+- Tell you the time or date
+- Check the real weather for your location
+- Tell you a random fact
+- Tell a joke, if your standards are low
 
-Every response is both typed into the transcript and spoken out loud.
+**Useful stuff**
+- Quick math, like "what is 12 plus 4"
+- Unit conversions, like "convert 10 km to miles" (also handles miles to km, kg to lbs, lbs to kg, and celsius to fahrenheit both ways)
+- The time somewhere else in the world, like "what time is it in tokyo"
+- Look up a word's definition, like "define ephemeral"
+- Check your device's battery level, if your browser supports it
+
+**For fun**
+- Flip a coin
+- Roll a dice (or a specific one, like "roll a d20")
+
+**Memory**
+- Take a note, like "take a note: buy milk", then ask "what are my notes" any time
+- Set a reminder, like "remind me to stretch in 10 minutes"
+- Set a plain timer, like "set a timer for 5 minutes"
+
+**Utility**
+- Open a site ("open youtube", "open github")
+- Search the web ("search for mechanical keyboards")
+- Show your conversation history, or clear it
+
+Every response is both shown briefly on screen and spoken out loud.
+
+## About the conversation history
+
+I wanted the screen to stay clean, so there's no permanent chat log cluttering the HUD. Instead, every reply shows up as a brief caption near the core that fades out after a few seconds. Nothing is lost though, every exchange is saved automatically in the background.
+
+To look back at everything you've said, click the "history" button in the top right corner (or just say "show my history"). It opens a panel grouped by day, with a "clear" button if you'd rather start fresh. All of it lives in your browser's local storage, nothing is sent anywhere.
 
 ## A note on browser support
 
@@ -59,6 +83,8 @@ The voice of this thing lives entirely in the plain strings inside `commands.js`
 - **Colors and the ring animation** are CSS variables and keyframes at the top of `style.css`.
 - **The decorative "power" readout** in the corner is just for flavor, it's not measuring anything real, it's in `script.js` if you want to wire it to something real like the Battery Status API.
 - **Voice tone**: `utterance.rate` and `utterance.pitch` in the `speak()` function in `script.js` control how the responses sound.
+- **World clock cities**: add more entries to `WORLD_CLOCK_ZONES` in `commands.js`, each one just needs a valid IANA timezone name.
+- **Unit conversions**: add more entries to `UNIT_CONVERSIONS` in `commands.js`, each one is just a small function.
 
 ## License
 

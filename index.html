@@ -13,7 +13,7 @@
 <div class="grid-overlay"></div>
 
 <div class="edge-readout edge-tl" id="readoutTime"></div>
-<div class="edge-readout edge-tr" id="readoutDate"></div>
+<button class="edge-readout edge-tr history-toggle" id="historyToggle" title="View conversation history">history</button>
 <div class="edge-readout edge-bl" id="readoutPower">power &middot; <span id="powerVal">98%</span></div>
 <div class="edge-readout edge-br" id="readoutStatus">standing by</div>
 
@@ -31,9 +31,9 @@
       <div class="core-hint" id="coreHint">tap to talk</div>
     </div>
   </div>
-</main>
 
-<section class="transcript" id="transcript"></section>
+  <p class="toast" id="toast"></p>
+</main>
 
 <form class="text-input-row" id="textForm">
   <input type="text" id="textInput" placeholder="or type a command&hellip;" autocomplete="off" />
@@ -43,6 +43,19 @@
 <button class="talk-btn" id="talkBtn">
   <span id="talkBtnLabel">hold to talk</span>
 </button>
+
+<div class="history-overlay" id="historyOverlay">
+  <div class="history-panel">
+    <div class="history-header">
+      <h2>conversation history</h2>
+      <div class="history-actions">
+        <button class="ghost-btn" id="clearHistoryBtn">clear</button>
+        <button class="close-btn" id="closeHistoryBtn" aria-label="Close">&times;</button>
+      </div>
+    </div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</div>
 
 <script src="commands.js"></script>
 <script src="script.js"></script>
