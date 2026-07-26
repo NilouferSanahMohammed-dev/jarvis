@@ -237,6 +237,23 @@ const COMMANDS = [
     },
   },
   {
+    test: (t) => /^(email|send (an )?email|compose (an )?email)\b/.test(t),
+    run: (t) => {
+      let rest = t.replace(/^(email|send (an )?email|compose (an )?email)\b\s*/, "").trim();
+      let to = "";
+      const toMatch = rest.match(/^to\s+([a-z]+)\s*/);
+      if (toMatch) {
+        to = toMatch[1];
+        rest = rest.slice(toMatch[0].length).trim();
+      }
+      const subject = rest.replace(/^about\s+/, "").trim() || "quick note";
+      window.open(`mailto:?subject=${encodeURIComponent(subject)}`, "_blank");
+      return to
+        ? `I've opened a blank email with the subject set to "${subject}". I don't have access to your contacts, so you'll need to add ${to}'s address yourself.`
+        : `I've opened a blank email with the subject set to "${subject}". add the recipient yourself, I don't have access to your contacts.`;
+    },
+  },
+  {
     test: (t) => /^set a timer for|^timer for/.test(t),
     run: (t) => {
       const match = t.match(/(\d+)\s*(second|minute|hour)/);
@@ -351,7 +368,7 @@ const COMMANDS = [
   {
     test: (t) => /help|what can you do/.test(t),
     run: () =>
-      "the time, date, or weather, a joke, quick math, unit conversions, the time somewhere else in the world, a random fact, your battery level, defining a word, flipping a coin, rolling a dice, taking notes, setting reminders and timers, opening a site, searching the web, or remembering your name if you tell me to call you something. within reason, I'm at your disposal.",
+      "the time, date, or weather, a joke, quick math, unit conversions, the time somewhere else in the world, a random fact, your battery level, defining a word, flipping a coin, rolling a dice, taking notes, setting reminders and timers, opening a site, searching the web, drafting an email, or remembering your name if you tell me to call you something. within reason, I'm at your disposal.",
   },
 ];
 

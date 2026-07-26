@@ -14,9 +14,9 @@ It asks what to call you, once, and remembers it in that browser from then on (t
 
 **Tap the core** (where "jarvis" is written), say one thing, done. Works every time, no setup needed.
 
-**Say "hey jarvis"**, hands-free, if you turn on the toggle in the top right corner. This keeps the microphone continuously listening in the background for the wake phrase specifically, nothing else gets sent anywhere or acted on until you say it. When it's on, the outer ring gets a slow amber pulse so it's always visually obvious the mic is live. Say "hey jarvis" alone and it'll wait for your next sentence, or say the whole thing in one breath, like "hey jarvis, what's the weather," and it skips straight to answering.
+**Say "hey jarvis"**, hands-free. This is on by default: the microphone continuously listens in the background for the wake phrase specifically, nothing else gets sent anywhere or acted on until you say it. You can turn it off any time with the toggle in the top right corner. When it's on, the outer ring gets a slow amber pulse so it's always visually obvious the mic is live. Say "hey jarvis" alone and it'll wait for your next sentence, or say the whole thing in one breath, like "hey jarvis, what's the weather," and it skips straight to answering.
 
-This is an opt-in toggle rather than always on by default, continuously listening in the background is a real thing worth being asked about first, not something a page should just start doing on its own.
+One browser quirk worth knowing: microphones can only be activated after you've actually interacted with the page in some way, clicked, tapped, typed, that's a security rule every browser enforces, not something this project can bypass. So on your very first visit, hands-free listening arms itself the moment you do anything at all on the page, typing your name into the identity prompt counts. If you ever grant then later block microphone access in your browser's site settings, the hint text will tell you plainly instead of just failing silently.
 
 ## Talking to it naturally
 
@@ -57,8 +57,13 @@ Under the hood, it strips the wake phrase and common filler words ("could you," 
 **Utility**
 - Open a site ("open youtube", "open github")
 - Search the web ("search for mechanical keyboards")
+- Draft an email ("email about the project update"), opens a real blank email with the subject filled in, ready for you to address and send
 
 Every response is both shown briefly on screen and spoken out loud.
+
+## What this can't do, on purpose
+
+This runs entirely inside a browser tab, and browsers deliberately sandbox web pages away from the operating system. That's not a gap in this project specifically, it's the same reason no website, from any developer, can restart your computer, close a notification from another app, or read your files without you explicitly choosing them. If a webpage *could* do those things, every malicious site on the internet would too. So voice commands here are limited to what a browser tab can actually reach: opening sites, drafting emails, searching the web, and so on, not controlling the machine itself. A real "control my whole laptop" assistant would need to be a native app installed with OS-level permissions, which is a fundamentally different (and far more sensitive) piece of software than a page you can open with a link.
 
 ## A note on browser support
 

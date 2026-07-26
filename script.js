@@ -163,18 +163,22 @@ const WAKE_PATTERN = /\bhey jarvis\b|\bjarvis\b/;
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 let listening = false;
-let wakeModeEnabled = localStorage.getItem(WAKE_MODE_KEY) === "on";
+let wakeModeEnabled = localStorage.getItem(WAKE_MODE_KEY) !== "off"; // on by default
 let awaitingCommand = false;
+let micDenied = false;
+let wakeAnnounced = false;
 
 function updateWakeToggleUI() {
   wakeToggle.textContent = `hey jarvis: ${wakeModeEnabled ? "on" : "off"}`;
   wakeToggle.classList.toggle("on", wakeModeEnabled);
   coreWrap.classList.toggle("wake-armed", wakeModeEnabled);
-  coreHint.textContent = wakeModeEnabled ? "say \u201chey jarvis\u201d, or tap me" : "tap to talk";
+  if (!micDenied) {
+    coreHint.textContent = wakeModeEnabled ? "say \u201chey jarvis\u201d, or tap me" : "tap to talk";
+  }
 }
 
 function startRecognition() {
-  if (!recognition) return;
+  if (!recognition || micDenied) return;
   recognition.continuous = wakeModeEnabled;
   try { recognition.start(); } catch { /* already running */ }
 }
@@ -189,6 +193,11 @@ if (SpeechRecognitionAPI) {
     coreWrap.classList.add("listening");
     statusEl.textContent = wakeModeEnabled ? "listening for \u201chey jarvis\u201d" : "listening";
     if (!wakeModeEnabled) coreHint.textContent = "listening...";
+
+    if (wakeModeEnabled && !wakeAnnounced) {
+      wakeAnnounced = true;
+      speak("voice activation online. say hey jarvis any time.");
+    }
   };
 
   recognition.onresult = (event) => {
@@ -228,13 +237,22 @@ if (SpeechRecognitionAPI) {
     // Otherwise: ambient speech not directed at jarvis, ignore it.
   };
 
-  recognition.onerror = () => {
-    statusEl.textContent = "mic error";
+  recognition.onerror = (event) => {
+    if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+      micDenied = true;
+      statusEl.textContent = "microphone blocked";
+      coreHint.textContent = "microphone access is blocked, allow it in your browser's site settings, or type below";
+    } else if (event.error === "no-speech") {
+      // Nothing said during this window, entirely normal in wake mode, ignore it.
+    } else {
+      statusEl.textContent = "mic error";
+    }
   };
 
   recognition.onend = () => {
     listening = false;
     coreWrap.classList.remove("listening");
+    if (micDenied) return;
     if (!wakeModeEnabled) {
       coreHint.textContent = "tap to talk";
       if (statusEl.textContent === "listening") statusEl.textContent = "standing by";
@@ -254,6 +272,8 @@ if (SpeechRecognitionAPI) {
         awaitingCommand = true;
         coreWrap.classList.add("awaiting");
         coreHint.textContent = "yes?";
+      } else {
+        startRecognition();
       }
       return;
     }
@@ -277,7 +297,17 @@ if (SpeechRecognitionAPI) {
   });
 
   updateWakeToggleUI();
-  if (wakeModeEnabled) startRecognition();
+
+  // Browsers only grant microphone access following a real user gesture,
+  // so wake mode (on by default) arms itself the moment the person does
+  // anything at all on the page, a click, a tap, a keypress, rather than
+  // requiring them to specifically find and press the toggle first.
+  const armOnFirstInteraction = () => {
+    if (wakeModeEnabled && !listening) startRecognition();
+  };
+  ["click", "keydown", "touchstart"].forEach((evt) =>
+    document.addEventListener(evt, armOnFirstInteraction, { once: true })
+  );
 } else {
   coreWrap.style.cursor = "default";
   coreHint.textContent = "voice input isn't supported in this browser, type below instead";
@@ -288,9 +318,12 @@ if (SpeechRecognitionAPI) {
 
 function greet() {
   const name = getUserName();
+  const wakeNote = wakeModeEnabled
+    ? "hands-free is on, just say \u201chey jarvis\u201d any time."
+    : "tap me and speak, or just type below.";
   const greeting = name
-    ? `good to see you, ${name}. all systems green. tap me and speak, or just type below, either works.`
-    : "good to see you. all systems green. tap me and speak, or just type below, either works.";
+    ? `good to see you, ${name}. all systems green. ${wakeNote}`
+    : `good to see you. all systems green. ${wakeNote}`;
   addLine("jarvis", greeting);
 }
 

@@ -258,24 +258,61 @@ html, body {
 .name-overlay.open { display: flex; }
 
 .name-card {
-  width: min(360px, 90vw);
-  background: rgba(9,20,26,0.9);
+  position: relative;
+  width: min(380px, 90vw);
+  background: rgba(9,20,26,0.92);
   border: 1px solid var(--cyan-dim);
-  border-radius: 14px;
-  padding: 28px 26px;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+  padding: 34px 30px;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
+}
+
+.name-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--cyan);
+  opacity: 0.7;
+}
+.name-corner-tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.name-corner-tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+.name-corner-bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+.name-corner-br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+.name-eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin: 0 0 6px;
 }
 
 .name-card h2 {
   font-family: 'Orbitron', sans-serif;
   font-size: 15px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--cyan);
   margin: 0;
+  line-height: 1.4;
+}
+
+.name-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-dim);
+  margin: 4px 0 14px;
+  line-height: 1.5;
+}
+
+.name-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .name-card input {
@@ -285,7 +322,6 @@ html, body {
   font-family: 'Space Mono', monospace;
   font-size: 14px;
   padding: 10px 12px;
-  border-radius: 8px;
   text-align: center;
 }
 .name-card input:focus { outline: none; border-color: var(--cyan); }
@@ -299,7 +335,7 @@ html, body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 10px 16px;
-  border-radius: 8px;
   cursor: pointer;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 .name-card button:hover { background: rgba(109,243,255,0.2); }

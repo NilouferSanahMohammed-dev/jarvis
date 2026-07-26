@@ -42,11 +42,19 @@
 </form>
 
 <div class="name-overlay" id="nameOverlay">
-  <form class="name-card" id="nameForm">
-    <h2>what should I call you?</h2>
-    <input type="text" id="nameInput" placeholder="your name" autocomplete="off" autofocus />
-    <button type="submit">let's go</button>
-  </form>
+  <div class="name-card">
+    <div class="name-corner name-corner-tl"></div>
+    <div class="name-corner name-corner-tr"></div>
+    <div class="name-corner name-corner-bl"></div>
+    <div class="name-corner name-corner-br"></div>
+    <p class="name-eyebrow">system initialization</p>
+    <h2>identity verification required</h2>
+    <p class="name-sub">state your name to personalize this session.</p>
+    <form id="nameForm">
+      <input type="text" id="nameInput" placeholder="your name" autocomplete="off" autofocus />
+      <button type="submit">confirm identity</button>
+    </form>
+  </div>
 </div>
 
 <script src="commands.js"></script>
