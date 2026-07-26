@@ -18,7 +18,7 @@
 <div class="edge-readout edge-br" id="readoutStatus">standing by</div>
 
 <main class="core-stage">
-  <div class="core-wrap">
+  <button class="core-wrap" id="coreWrap" aria-label="Tap to talk to jarvis">
     <svg class="core-rings" id="coreRings" viewBox="0 0 400 400">
       <circle class="ring ring-outer" cx="200" cy="200" r="180" />
       <circle class="ring ring-mid" cx="200" cy="200" r="150" />
@@ -30,7 +30,7 @@
       <div class="core-name">jarvis</div>
       <div class="core-hint" id="coreHint">tap to talk</div>
     </div>
-  </div>
+  </button>
 
   <p class="toast" id="toast"></p>
 </main>
@@ -39,10 +39,6 @@
   <input type="text" id="textInput" placeholder="or type a command&hellip;" autocomplete="off" />
   <button type="submit">send</button>
 </form>
-
-<button class="talk-btn" id="talkBtn">
-  <span id="talkBtnLabel">hold to talk</span>
-</button>
 
 <div class="history-overlay" id="historyOverlay">
   <div class="history-panel">

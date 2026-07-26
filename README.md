@@ -8,7 +8,7 @@ I'll be upfront about the one thing worth being upfront about: this is my own bu
 
 ## What it can actually do
 
-Hold the talk button and speak, or just type in the box, either works.
+Tap the core (where "jarvis" is written) and speak, or just type in the box, either works.
 
 **Basics**
 - Tell you the time or date
@@ -47,7 +47,7 @@ To look back at everything you've said, click the "history" button in the top ri
 
 ## A note on browser support
 
-Voice *input* uses the `SpeechRecognition` API, which Chrome and Edge support well, but Firefox and Safari currently don't. If your browser doesn't support it, the talk button hides itself automatically and you just get the text input, which works everywhere.
+Voice *input* uses the `SpeechRecognition` API, which Chrome and Edge support well, but Firefox and Safari currently don't. If your browser doesn't support it, tapping the core won't do anything, so the hint text switches to telling you to type instead, which works everywhere.
 
 Voice *output* (the spoken replies) uses `SpeechSynthesis`, which is supported much more broadly, so that part should work in most modern browsers regardless.
 

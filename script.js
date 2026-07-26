@@ -8,10 +8,8 @@
  * more broadly supported.
  */
 
-const coreWrap = document.querySelector(".core-wrap");
+const coreWrap = document.getElementById("coreWrap");
 const coreHint = document.getElementById("coreHint");
-const talkBtn = document.getElementById("talkBtn");
-const talkBtnLabel = document.getElementById("talkBtnLabel");
 const toast = document.getElementById("toast");
 const textForm = document.getElementById("textForm");
 const textInput = document.getElementById("textInput");
@@ -222,8 +220,7 @@ if (SpeechRecognitionAPI) {
   recognition.onstart = () => {
     listening = true;
     coreWrap.classList.add("listening");
-    talkBtn.classList.add("listening");
-    talkBtnLabel.textContent = "listening...";
+    coreHint.textContent = "listening...";
     statusEl.textContent = "listening";
   };
 
@@ -239,36 +236,27 @@ if (SpeechRecognitionAPI) {
   recognition.onend = () => {
     listening = false;
     coreWrap.classList.remove("listening");
-    talkBtn.classList.remove("listening");
-    talkBtnLabel.textContent = "hold to talk";
+    coreHint.textContent = "tap to talk";
     if (statusEl.textContent === "listening") statusEl.textContent = "standing by";
   };
 
-  const startListening = (e) => {
-    e.preventDefault();
-    if (listening) return;
-    try { recognition.start(); } catch { /* already started */ }
-  };
-  const stopListening = (e) => {
-    e.preventDefault();
-    if (listening) recognition.stop();
-  };
+  coreWrap.addEventListener("click", () => {
+    if (listening) {
+      recognition.stop();
+    } else {
+      try { recognition.start(); } catch { /* already started */ }
+    }
+  });
 
-  talkBtn.addEventListener("mousedown", startListening);
-  talkBtn.addEventListener("mouseup", stopListening);
-  talkBtn.addEventListener("mouseleave", stopListening);
-  talkBtn.addEventListener("touchstart", startListening, { passive: false });
-  talkBtn.addEventListener("touchend", stopListening);
-
-  coreHint.textContent = "hold the button below and speak";
+  coreHint.textContent = "tap to talk";
 } else {
-  talkBtn.style.display = "none";
+  coreWrap.style.cursor = "default";
   coreHint.textContent = "voice input isn't supported in this browser, type below instead";
 }
 
 /* ---------------- Greeting ---------------- */
 
 setTimeout(() => {
-  const greeting = "good to see you. all systems green. hold the talk button and speak, or just type below, either works.";
+  const greeting = "good to see you. all systems green. tap me and speak, or just type below, either works.";
   addLine("jarvis", greeting);
 }, 500);

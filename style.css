@@ -61,7 +61,16 @@ html, body {
   position: relative;
   width: min(60vmin, 380px);
   aspect-ratio: 1;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
+
+.core-wrap:hover .core-glow { opacity: 0.85; }
 
 .core-rings { width: 100%; height: 100%; overflow: visible; }
 
@@ -126,7 +135,7 @@ html, body {
 
 .toast {
   position: absolute;
-  bottom: 140px;
+  bottom: 90px;
   left: 50%;
   transform: translateX(-50%);
   width: min(480px, 88vw);
@@ -256,7 +265,7 @@ html, body {
   position: fixed;
   z-index: 2;
   left: 50%;
-  bottom: 76px;
+  bottom: 26px;
   transform: translateX(-50%);
   width: min(420px, 84vw);
   display: flex;
@@ -286,29 +295,6 @@ html, body {
   cursor: pointer;
 }
 .text-input-row button:hover { background: rgba(109,243,255,0.16); }
-
-/* ---------------- Talk button ---------------- */
-
-.talk-btn {
-  position: fixed;
-  z-index: 2;
-  left: 50%;
-  bottom: 20px;
-  transform: translateX(-50%);
-  background: rgba(109,243,255,0.08);
-  border: 1px solid var(--cyan);
-  color: var(--cyan);
-  font-family: 'Orbitron', sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 12px 28px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.talk-btn:hover { background: rgba(109,243,255,0.18); }
-.talk-btn.listening { background: rgba(109,243,255,0.3); box-shadow: 0 0 24px var(--cyan-dim); }
 
 @media (max-width: 640px) {
   .edge-tr, .edge-br { text-align: right; font-size: 10px; }
