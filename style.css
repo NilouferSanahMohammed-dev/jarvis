@@ -43,6 +43,7 @@ html, body {
 }
 .edge-tl { top: 24px; left: 26px; font-family: 'Orbitron', sans-serif; font-size: 15px; color: var(--cyan); text-shadow: 0 0 10px var(--cyan-dim); }
 .edge-tr { top: 24px; right: 26px; text-align: right; }
+.edge-tr-stack { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .edge-bl { bottom: 24px; left: 26px; }
 .edge-br { bottom: 24px; right: 26px; text-align: right; }
 

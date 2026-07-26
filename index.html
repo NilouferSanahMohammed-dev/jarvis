@@ -13,7 +13,10 @@
 <div class="grid-overlay"></div>
 
 <div class="edge-readout edge-tl" id="readoutTime"></div>
-<button class="edge-readout edge-tr wake-toggle" id="wakeToggle" title="Toggle hands-free 'hey jarvis' listening">hey jarvis: off</button>
+<div class="edge-readout edge-tr edge-tr-stack">
+  <span id="readoutDate"></span>
+  <button class="wake-toggle" id="wakeToggle" title="Toggle hands-free 'hey jarvis' listening">hey jarvis: off</button>
+</div>
 <div class="edge-readout edge-bl" id="readoutPower">power &middot; <span id="powerVal">98%</span></div>
 <div class="edge-readout edge-br" id="readoutStatus">standing by</div>
 
