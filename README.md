@@ -61,6 +61,29 @@ Under the hood, it strips the wake phrase and common filler words ("could you," 
 
 Every response is both shown briefly on screen and spoken out loud.
 
+## Actual open-ended conversation
+
+Everything above is instant, free, and works the moment you open the page, it's all pattern matching, no AI involved. But if you ask it something that isn't one of those built-in commands, like "what do you think about..." or just a normal back-and-forth question, it can hand that off to a real language model instead of shrugging.
+
+This needs a small backend, because a language model API key can't safely live in a public repo's frontend code, anyone could pull it straight out of the page source and run up charges on your account. So the key lives server-side, and the browser only ever talks to your own backend, never to the AI provider directly.
+
+### Setting it up
+
+1. **Get an Anthropic API key** at [console.anthropic.com](https://console.anthropic.com). This is a paid API (Claude Haiku, the model this uses by default, is inexpensive, but it isn't free, keep an eye on usage).
+2. **Deploy this whole repo to [Vercel](https://vercel.com)** (or any host that runs serverless functions the same way, Vercel is just the path of least resistance here). The `/api/chat.js` file in this repo is already written as a Vercel serverless function.
+3. In your Vercel project settings, add an environment variable: `ANTHROPIC_API_KEY` set to the key from step 1. (See `.env.example` for the shape.)
+4. Open `commands.js` and set:
+   ```js
+   const AI_CHAT_ENDPOINT = "https://your-app.vercel.app/api/chat";
+   ```
+5. Redeploy (or just push the change), and open jarvis again. Anything that isn't a built-in command now goes to the AI instead of a dead-end "I don't have a command for that" message.
+
+Without this set up, jarvis works exactly as it did before, all the built-in commands, just no open-ended chat for anything outside them. Nothing breaks if you skip this section entirely.
+
+### What it remembers mid-conversation
+
+The last several exchanges of your conversation get sent along with each new message, so it has some memory of what you just talked about in that session. It doesn't persist between page loads (unlike your name, which does), it's just enough context for the AI to follow a real back-and-forth rather than treating every message as the first thing you've ever said to it.
+
 ## What this can't do, on purpose
 
 This runs entirely inside a browser tab, and browsers deliberately sandbox web pages away from the operating system. That's not a gap in this project specifically, it's the same reason no website, from any developer, can restart your computer, close a notification from another app, or read your files without you explicitly choosing them. If a webpage *could* do those things, every malicious site on the internet would too. So voice commands here are limited to what a browser tab can actually reach: opening sites, drafting emails, searching the web, and so on, not controlling the machine itself. A real "control my whole laptop" assistant would need to be a native app installed with OS-level permissions, which is a fundamentally different (and far more sensitive) piece of software than a page you can open with a link.
@@ -107,6 +130,7 @@ The voice of this thing lives entirely in the plain strings inside `commands.js`
 - **Unit conversions**: add more entries to `UNIT_CONVERSIONS` in `commands.js`, each one is just a small function.
 - **The wake phrase itself**: `WAKE_PATTERN` near the top of the voice recognition section in `script.js` is just a regular expression, change it if you'd rather it respond to a different name.
 - **Filler words it ignores**: the `fillerPrefixes` list inside `normalizeInput()` in `commands.js`, add more polite phrasings there if you keep saying something it doesn't strip yet.
+- **The AI's personality**: if you've set up the backend, `SYSTEM_PROMPT` at the top of `api/chat.js` is where its conversational voice is defined, separate from the built-in commands' scripted lines in `commands.js`.
 
 ## License
 

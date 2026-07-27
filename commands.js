@@ -9,7 +9,39 @@
  *
  * To add a new command: add an object to COMMANDS with your own test
  * and run functions. Nothing else needs to change.
+ *
+ * Anything that doesn't match a built-in command falls through to
+ * askAI(), which is real open-ended conversation via a small backend
+ * you deploy yourself (see README). Without that backend configured,
+ * it just returns a plain "I don't have a command for that" message,
+ * same as before, nothing breaks if you skip this part.
  */
+
+const AI_CHAT_ENDPOINT = ""; // e.g. "https://your-app.vercel.app/api/chat"
+
+async function askAI(message, context) {
+  if (!AI_CHAT_ENDPOINT) {
+    return `I heard "${message}", but I don't have a command for that yet. Try "help" to see what I can do.`;
+  }
+
+  try {
+    const res = await fetch(AI_CHAT_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message,
+        name: context?.name || "",
+        history: context?.history || [],
+      }),
+    });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const data = await res.json();
+    return data.reply || "I didn't quite catch that.";
+  } catch (err) {
+    console.error("jarvis: askAI failed", err);
+    return "I couldn't reach my thinking backend just now. Try again in a moment, or ask me something I have a built-in command for.";
+  }
+}
 
 const JOKES = [
   "why do programmers prefer dark mode? because light attracts bugs.",
@@ -382,5 +414,5 @@ async function handleCommand(rawInput, context = {}) {
     }
   }
 
-  return `I heard "${rawInput}", but I don't have a command for that yet. Try "help" to see what I can do.`;
+  return await askAI(rawInput, context);
 }

@@ -118,11 +118,19 @@ function speak(text) {
 
 /* ---------------- Command submission (shared by voice + text) ---------------- */
 
+const conversationHistory = [];
+const MAX_HISTORY_TURNS = 12;
+
 async function submitCommand(text) {
   addLine("user", text);
-  const reply = await handleCommand(text, { name: getUserName() });
+  const reply = await handleCommand(text, { name: getUserName(), history: conversationHistory });
   addLine("jarvis", reply);
   speak(reply);
+
+  conversationHistory.push({ role: "user", content: text }, { role: "jarvis", content: reply });
+  if (conversationHistory.length > MAX_HISTORY_TURNS) {
+    conversationHistory.splice(0, conversationHistory.length - MAX_HISTORY_TURNS);
+  }
 }
 
 /* ---------------- Text input fallback ---------------- */
