@@ -61,6 +61,15 @@ Under the hood, it strips the wake phrase and common filler words ("could you," 
 
 Every response is both shown briefly on screen and spoken out loud.
 
+## How it works, in plain English
+
+- Whatever you say or type gets cleaned up first: the wake phrase and polite filler words get stripped out, so "hey jarvis could you open youtube please" and "open youtube" end up meaning the same thing
+- That cleaned-up text gets checked against a list of known command patterns, top to bottom, first match wins
+- Matched something? Run that command's logic and speak the result
+- Matched nothing, and a backend's configured? Send it to the AI instead, along with the last few things you've said, and speak whatever it replies
+- Matched nothing, and no backend's configured? Say so plainly instead of pretending to understand
+- In hands-free mode, the mic stays on continuously, but everything above only runs once it actually hears "jarvis" in what you said, anything else gets ignored
+
 ## Actual open-ended conversation
 
 Everything above is instant, free, and works the moment you open the page, it's all pattern matching, no AI involved. But if you ask it something that isn't one of those built-in commands, like "what do you think about..." or just a normal back-and-forth question, it can hand that off to a real language model instead of shrugging.
