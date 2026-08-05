@@ -322,6 +322,31 @@ if (SpeechRecognitionAPI) {
   wakeToggle.style.display = "none";
 }
 
+/* ---------------- Shared tasks (read from daily-deck, same origin) ---------------- */
+
+const TASKS_KEY = "sanah-shared-tasks-v1";
+
+function getTodaysTasks() {
+  try {
+    const all = JSON.parse(localStorage.getItem(TASKS_KEY)) || [];
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    return all.filter((t) => !t.done && t.dueDate && t.dueDate <= todayStr);
+  } catch {
+    return [];
+  }
+}
+
+function taskSummarySentence() {
+  const todaysTasks = getTodaysTasks();
+  if (todaysTasks.length === 0) {
+    return "you don't have anything logged for today.";
+  }
+  const titles = todaysTasks.slice(0, 5).map((t) => t.title).join(", ");
+  const more = todaysTasks.length > 5 ? `, and ${todaysTasks.length - 5} more` : "";
+  return `you have ${todaysTasks.length} task${todaysTasks.length === 1 ? "" : "s"} today: ${titles}${more}.`;
+}
+
 /* ---------------- Greeting ---------------- */
 
 function greet() {
@@ -333,6 +358,11 @@ function greet() {
     ? `good to see you, ${name}. all systems green. ${wakeNote}`
     : `good to see you. all systems green. ${wakeNote}`;
   addLine("jarvis", greeting);
+
+  setTimeout(() => {
+    const taskLine = name ? `by the way, ${taskSummarySentence()}` : taskSummarySentence();
+    addLine("jarvis", taskLine);
+  }, 1200);
 }
 
 setTimeout(() => {

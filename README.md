@@ -53,6 +53,7 @@ Under the hood, it strips the wake phrase and common filler words ("could you," 
 - Set a reminder, like "remind me to stretch in 10 minutes"
 - Set a plain timer, like "set a timer for 5 minutes"
 - Remembers your name, and lets you change it with "call me" followed by a new one
+- Checks your tasks for today ("what are my tasks") if you're also using my `daily-deck` project in the same browser, see below for how that actually works
 
 **Utility**
 - Open a site ("open youtube", "open github")
@@ -60,6 +61,12 @@ Under the hood, it strips the wake phrase and common filler words ("could you," 
 - Draft an email ("email about the project update"), opens a real blank email with the subject filled in, ready for you to address and send
 
 Every response is both shown briefly on screen and spoken out loud.
+
+## The daily-deck connection
+
+If you're also using my `daily-deck` task manager, jarvis can genuinely read what's on your list, not through an API, just through a shared browser storage key. Every one of my projects is deployed under the same `niloufersanahmohammed-dev.github.io` domain, and browsers scope `localStorage` to the domain rather than the specific page, so both projects are quietly reading and writing the same storage. Add a task in daily-deck, open jarvis in that same browser, and a few seconds after it greets you, it'll mention how many tasks you've got due today and what they are, or you can just ask "what are my tasks" any time.
+
+The real limitation: this only works within one browser on one device, since that's the actual boundary of what `localStorage` shares. Tasks added on your laptop won't show up when you ask jarvis on your phone.
 
 ## How it works, in plain English
 

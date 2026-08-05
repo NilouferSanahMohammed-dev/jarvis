@@ -220,6 +220,10 @@ const COMMANDS = [
     run: (t, ctx) => (ctx?.name ? `you're ${ctx.name}, as far as I know.` : "I don't have a name for you yet, try saying 'call me' followed by your name."),
   },
   {
+    test: (t) => /my tasks|my to.?do|on my list|what.*i.*do today/.test(t),
+    run: () => (typeof taskSummarySentence === "function" ? taskSummarySentence() : "I can't check tasks in this build."),
+  },
+  {
     test: (t) => /what time is it|current time/.test(t),
     run: () => `it's ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`,
   },
@@ -400,7 +404,7 @@ const COMMANDS = [
   {
     test: (t) => /help|what can you do/.test(t),
     run: () =>
-      "the time, date, or weather, a joke, quick math, unit conversions, the time somewhere else in the world, a random fact, your battery level, defining a word, flipping a coin, rolling a dice, taking notes, setting reminders and timers, opening a site, searching the web, drafting an email, or remembering your name if you tell me to call you something. within reason, I'm at your disposal.",
+      "the time, date, or weather, a joke, quick math, unit conversions, the time somewhere else in the world, a random fact, your battery level, defining a word, flipping a coin, rolling a dice, taking notes, setting reminders and timers, opening a site, searching the web, drafting an email, checking your tasks for today if you use daily deck, or remembering your name if you tell me to call you something. within reason, I'm at your disposal.",
   },
 ];
 
