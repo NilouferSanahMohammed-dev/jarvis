@@ -79,11 +79,15 @@ The real limitation: this only works within one browser on one device, since tha
 
 ## Actual open-ended conversation
 
-Everything above is instant, free, and works the moment you open the page, it's all pattern matching, no AI involved. But if you ask it something that isn't one of those built-in commands, like "what do you think about..." or just a normal back-and-forth question, it can hand that off to a real language model instead of shrugging.
+Everything above is instant, free, and works the moment you open the page, it's all pattern matching, no AI involved. But if you ask it something that isn't one of those built-in commands, like "what do you think about..." or just a normal back-and-forth question, it tries to hand that off to a real language model instead of shrugging.
 
-This needs a small backend, because a language model API key can't safely live in a public repo's frontend code, anyone could pull it straight out of the page source and run up charges on your account. So the key lives server-side, and the browser only ever talks to your own backend, never to the AI provider directly.
+### Works out of the box, no setup
 
-### Setting it up
+By default, jarvis tries a free, keyless community text API called [Pollinations](https://pollinations.ai) directly from the browser. No account, no API key, no backend to deploy, it just tries it. I want to be honest about the tradeoff: this is a third-party service run by volunteers, with no uptime guarantee, so it might answer instantly or it might not respond at all depending on the day. If it doesn't, jarvis just falls back to its plain "I don't have a command for that" message, same as if this feature didn't exist. Nothing breaks either way, it's a genuine "try it and see" rather than a promise.
+
+### A more reliable option, if you want it
+
+If the free path feels flaky and you want something you actually control, you can point jarvis at your own backend instead:
 
 1. **Get an Anthropic API key** at [console.anthropic.com](https://console.anthropic.com). This is a paid API (Claude Haiku, the model this uses by default, is inexpensive, but it isn't free, keep an eye on usage).
 2. **Deploy this whole repo to [Vercel](https://vercel.com)** (or any host that runs serverless functions the same way, Vercel is just the path of least resistance here). The `/api/chat.js` file in this repo is already written as a Vercel serverless function.
@@ -92,13 +96,11 @@ This needs a small backend, because a language model API key can't safely live i
    ```js
    const AI_CHAT_ENDPOINT = "https://your-app.vercel.app/api/chat";
    ```
-5. Redeploy (or just push the change), and open jarvis again. Anything that isn't a built-in command now goes to the AI instead of a dead-end "I don't have a command for that" message.
-
-Without this set up, jarvis works exactly as it did before, all the built-in commands, just no open-ended chat for anything outside them. Nothing breaks if you skip this section entirely.
+5. Redeploy (or just push the change), and open jarvis again. Once this is set, it's used instead of the free fallback, so replies come from a service you control and are paying for directly, no depending on someone else's free tier holding up.
 
 ### What it remembers mid-conversation
 
-The last several exchanges of your conversation get sent along with each new message, so it has some memory of what you just talked about in that session. It doesn't persist between page loads (unlike your name, which does), it's just enough context for the AI to follow a real back-and-forth rather than treating every message as the first thing you've ever said to it.
+The last several exchanges of your conversation get sent along with each new message, so it has some memory of what you just talked about in that session, whichever path is answering. It doesn't persist between page loads (unlike your name, which does), it's just enough context for the AI to follow a real back-and-forth rather than treating every message as the first thing you've ever said to it.
 
 ## What this can't do, on purpose
 

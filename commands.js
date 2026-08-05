@@ -11,35 +11,77 @@
  * and run functions. Nothing else needs to change.
  *
  * Anything that doesn't match a built-in command falls through to
- * askAI(), which is real open-ended conversation via a small backend
- * you deploy yourself (see README). Without that backend configured,
- * it just returns a plain "I don't have a command for that" message,
- * same as before, nothing breaks if you skip this part.
+ * askAI(), which tries real open-ended conversation two ways:
+ *
+ *   1. If AI_CHAT_ENDPOINT is set, it uses your own backend (see
+ *      README for the Anthropic + Vercel setup). This is the reliable
+ *      path, since you control it.
+ *   2. Otherwise, it tries a free, keyless community text API
+ *      (Pollinations) directly from the browser, no setup at all. This
+ *      is a "best effort" path: it's a third-party service with no
+ *      uptime guarantee, so it might work great or might not respond,
+ *      and there's genuinely no way to know without trying it. Either
+ *      way it fails gracefully back to a plain "I don't have a command
+ *      for that" message, so nothing breaks if it's ever down.
  */
 
-const AI_CHAT_ENDPOINT = ""; // e.g. "https://your-app.vercel.app/api/chat"
+const AI_CHAT_ENDPOINT = ""; // e.g. "https://your-app.vercel.app/api/chat", leave blank to use the free fallback
+
+const JARVIS_PERSONALITY_PROMPT =
+  "You are jarvis, a holographic HUD assistant with a dry, understated wit, inspired by " +
+  "the 'genius with a talking HUD' archetype but with your own original personality. Keep " +
+  "replies short, 1 to 3 sentences, conversational, spoken aloud by text-to-speech, so avoid " +
+  "markdown, bullet points, or asterisks.";
+
+async function askOwnBackend(message, context) {
+  const res = await fetch(AI_CHAT_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message,
+      name: context?.name || "",
+      history: context?.history || [],
+    }),
+  });
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  const data = await res.json();
+  return data.reply || "I didn't quite catch that.";
+}
+
+async function askFreeFallback(message, context) {
+  const recentHistory = (context?.history || [])
+    .slice(-4)
+    .map((turn) => `${turn.role === "jarvis" ? "jarvis" : "them"}: ${turn.content}`)
+    .join("\n");
+  const nameNote = context?.name ? ` Their name is ${context.name}.` : "";
+  const prompt = recentHistory ? `${recentHistory}\nthem: ${message}` : message;
+
+  const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?system=${encodeURIComponent(
+    JARVIS_PERSONALITY_PROMPT + nameNote
+  )}&model=openai`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  const text = (await res.text()).trim();
+  if (!text) throw new Error("empty response");
+  return text;
+}
 
 async function askAI(message, context) {
-  if (!AI_CHAT_ENDPOINT) {
-    return `I heard "${message}", but I don't have a command for that yet. Try "help" to see what I can do.`;
+  if (AI_CHAT_ENDPOINT) {
+    try {
+      return await askOwnBackend(message, context);
+    } catch (err) {
+      console.error("jarvis: own backend failed", err);
+      return "I couldn't reach my thinking backend just now. Try again in a moment, or ask me something I have a built-in command for.";
+    }
   }
 
   try {
-    const res = await fetch(AI_CHAT_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message,
-        name: context?.name || "",
-        history: context?.history || [],
-      }),
-    });
-    if (!res.ok) throw new Error(`status ${res.status}`);
-    const data = await res.json();
-    return data.reply || "I didn't quite catch that.";
+    return await askFreeFallback(message, context);
   } catch (err) {
-    console.error("jarvis: askAI failed", err);
-    return "I couldn't reach my thinking backend just now. Try again in a moment, or ask me something I have a built-in command for.";
+    console.error("jarvis: free fallback failed", err);
+    return `I heard "${message}", but I don't have a command for that yet, and couldn't reach the free backend either. Try "help" to see what I can do.`;
   }
 }
 
