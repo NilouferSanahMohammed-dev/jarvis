@@ -64,7 +64,7 @@ Every response is both shown briefly on screen and spoken out loud.
 
 ## The daily-deck connection
 
-If you're also using my `daily-deck` task manager, jarvis can genuinely read what's on your list, not through an API, just through a shared browser storage key. Every one of my projects is deployed under the same `niloufersanahmohammed-dev.github.io` domain, and browsers scope `localStorage` to the domain rather than the specific page, so both projects are quietly reading and writing the same storage. Add a task in daily-deck, open jarvis in that same browser, and a few seconds after it greets you, it'll mention how many tasks you've got due today and what they are, or you can just ask "what are my tasks" any time.
+If you're also using my `daily-deck` task manager, jarvis can genuinely read what's on your list, not through an API, just through a shared browser storage key. Every one of my projects is deployed under the same `niloufersanahmohammed-dev.github.io` domain, and browsers scope `localStorage` to the domain rather than the specific page, so both projects are quietly reading and writing the same storage. Add a task in daily-deck, open jarvis in that same browser, say "hi" (or tap the core and say hello), and it'll answer with how many tasks you've got due today and what they are, right in its greeting instead of just a generic hello. You can also ask "what are my tasks" any time after that.
 
 The real limitation: this only works within one browser on one device, since that's the actual boundary of what `localStorage` shares. Tasks added on your laptop won't show up when you ask jarvis on your phone.
 

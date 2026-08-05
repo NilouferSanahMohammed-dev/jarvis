@@ -239,7 +239,13 @@ function normalizeInput(rawInput) {
 const COMMANDS = [
   {
     test: (t) => /^(hi|hello|hey)\b/.test(t),
-    run: () => "hello. all systems nominal, for whatever that's worth at this hour.",
+    run: (t, ctx) => {
+      const opener = ctx?.name ? `hello, ${ctx.name}.` : "hello.";
+      if (typeof taskSummarySentence === "function") {
+        return `${opener} ${taskSummarySentence()}`;
+      }
+      return `${opener} all systems nominal, for whatever that's worth at this hour.`;
+    },
   },
   {
     test: (t) => /who are you|what('s| is) your name/.test(t),

@@ -358,11 +358,6 @@ function greet() {
     ? `good to see you, ${name}. all systems green. ${wakeNote}`
     : `good to see you. all systems green. ${wakeNote}`;
   addLine("jarvis", greeting);
-
-  setTimeout(() => {
-    const taskLine = name ? `by the way, ${taskSummarySentence()}` : taskSummarySentence();
-    addLine("jarvis", taskLine);
-  }, 1200);
 }
 
 setTimeout(() => {
